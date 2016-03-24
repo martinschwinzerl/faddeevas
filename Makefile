@@ -7,31 +7,31 @@ F2PY = f2py
 F2PYFLAGS = --opt="-O3 -ffast-math -ftree-vectorize"
 
 
-.PHONY: all
+.PHONY: all cernlib_c cernlib_f90_1 cernlib_f90_2
 
 all: cernlib_c cernlib_f90_1 cernlib_f90_2 root_improvement root_improvement_fast root_improvement_sincos
 
 cernlib_c:
-	@echo "cernlib-c"
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib-c/ErrorFunctions.c -o cernlib-c/wofz.so -lm
+	@echo "cernlib_c";
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_c/ErrorFunctions.c -o cernlib_c/wofz.so -lm
 
 cernlib_f90_1:
-	$(F2PY) $(F2PYFLAGS) -m wwerf -c cernlib-f90-1/erfr.f90; mv wwerf.so cernlib-f90-1
+	$(F2PY) $(F2PYFLAGS) -m wwerf -c cernlib_f90_1/erfr.f90; mv wwerf.so cernlib_f90_1
 
 cernlib_f90_2:
-	$(F2PY) $(F2PYFLAGS) -m wwerf2 -c cernlib-f90-2/errfff.f; mv wwerf2.so cernlib-f90-2
+	$(F2PY) $(F2PYFLAGS) -m wwerf2 -c cernlib_f90_2/errfff.f; mv wwerf2.so cernlib_f90_2
 
 root_improvement:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib-root-adapted/erfc.c cernlib-root-adapted/wofz.c -o cernlib-root-adapted/liberfc.so
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc.so
 
 root_improvement_fast:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib-root-adapted/erfc.c cernlib-root-adapted/wofz.c -o cernlib-root-adapted/liberfc_fast.so -DFAST_IMPL
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc_fast.so -DFAST_IMPL
 
 root_improvement_sincos:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib-root-adapted/erfc.c cernlib-root-adapted/wofz.c -o cernlib-root-adapted/liberfc_sincos.so -DSINCOS
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc_sincos.so -DSINCOS
 
 
 
 
 clean:
-	rm -f cernlib-c/*.so cernlib-f90-1/*.so cernlib-f90-2/*.so cernlib-root-adapted/*.so
+	rm -f cernlib_c/*.so cernlib_f90_1/*.so cernlib_f90_2/*.so cernlib_root_adapted/*.so
