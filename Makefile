@@ -22,13 +22,13 @@ cernlib_f90_2:
 	$(F2PY) $(F2PYFLAGS) -m wwerf2 -c cernlib_f90_2/errfff.f; mv wwerf2.so cernlib_f90_2
 
 root_improvement:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc.so
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c -o cernlib_root_adapted/liberfc.so
 
 root_improvement_fast:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc_fast.so -DFAST_IMPL
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c -o cernlib_root_adapted/liberfc_fast.so -DFAST_IMPL
 
 root_improvement_sincos:
-	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c cernlib_root_adapted/wofz.c -o cernlib_root_adapted/liberfc_sincos.so -DSINCOS
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c -o cernlib_root_adapted/liberfc_sincos.so -DSINCOS
 
 
 

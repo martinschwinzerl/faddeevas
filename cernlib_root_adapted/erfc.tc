@@ -1,6 +1,7 @@
 // Translated from C++ to C for SixTrack and MAD-X
-// Author: Laurent Deniau, BE/ABP, laurent.deniau@cern.ch
-// Date  : 2016.01.13
+// Authors: Laurent Deniau, BE/ABP, laurent.deniau@cern.ch;
+//          Adrian Oeftiger, BE/ABP, adrian.oeftiger@cern.ch
+// Date   : 2016.01.13
 
 // templated implementation of complex erf and erfc (see erfc.h)
 
@@ -506,6 +507,17 @@ NAME(faddeeva)(T in_re, T in_im)
     return NAME(faddeeva_impl)(in_re, in_im,  8.0, NAME(a11), NAME(npi11), NAME(taylorarr11));
 #endif
 }
+
+void
+NAME(wofz)(T in_re, T in_im, T* out_re, T* out_im)
+{ // wrapper for conformity with wofz interface in benchmark.ipynb
+        assert(out_re && out_im);
+
+    T _Complex z = NAME(faddeeva)(in_re, in_im);
+    *out_re = creal(z);
+    *out_im = cimag(z);
+}
+
 
 void
 NAME(cerf)(T in_re, T in_im, T* out_re, T* out_im)
