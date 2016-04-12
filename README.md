@@ -3,16 +3,16 @@ Collection of FADDEEVA Implementations
 
 Implementations
 
-  + mit-scipy-1: scipy v >0.14
-  + mpmath-python-1: multiprecision benchmark
-  + cernlib-f90-1: cernlib as in madx, sixtrack, ptc
-  + cernlib-f90-2: cernlib as in pyheadtail
-  + cernlib-python-1: pure python implementation 
-  + libcerf-1.4: C library
+  + mit-scipy: scipy v >0.14
+  + mpmath-python: multiprecision benchmark
+  + cernlib-f90: cernlib as in madx, sixtrack, ptc, pyheadtail
+  + cernlib-c: same as cernlib-f90 but in C
+  + cernlib-cuda: same as cernlib-f90 but in CUDA
+  + cernlib-root-adapted: C library implemented in ROOT, CERN
 
 
 Sources:
-  + https://github.com/PyCOMPLETE/PyHEADTAIL/master/spacecharge/spacecharge.py
+  + https://github.com/PyCOMPLETE/PyHEADTAIL/tree/master/spacecharge
   + http://www.bigdft.org/devel-doc/d0/dfa/wofz_8f90_source.html
   + http://www.bigdft.org/devel-doc/d0/dfa/wofz_8f90.html
   + http://dl.acm.org/citation.cfm?id=77629
