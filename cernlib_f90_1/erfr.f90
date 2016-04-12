@@ -15,7 +15,7 @@
     real(8) x,y,q,h,xl,xh,yh,tx,ty,tn,sx,sy,saux,  &
          rx(33),ry(33),cc,xlim,ylim,fac1,fac2,fac3
     parameter(cc=1.12837916709551D0,        &
-         xlim=5.33D0,,ylim=4.29D0,,fac1=3.2D0,,fac2=23,,fac3=21)
+         xlim=5.33D0,ylim=4.29D0,fac1=3.2D0,fac2=23,fac3=21)
 
     x = abs(xx)
     y = abs(yy)
