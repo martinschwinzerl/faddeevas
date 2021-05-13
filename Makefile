@@ -20,7 +20,7 @@ cernlib_rev_c:
 	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_rev_c/ErrorFunctions.c -o cernlib_rev_c/wofz_rev.so -lm
 
 cernlib_f90:
-	$(F2PY) $(F2PYFLAGS) -m wwerf -c cernlib_f90/erfr.f90; mv wwerf.so cernlib_f90
+	$(F2PY) $(F2PYFLAGS) -m wwerf -c cernlib_f90/erfr.f90; mv `ls -1 ./wwerf*.so` ./cernlib_f90/ ; cp `ls -1 ./cernlib_f90/wwerf*.so` ./cernlib_f90/wwerf.so
 
 root_improvement:
 	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_root_adapted/erfc.c -o cernlib_root_adapted/liberfc.so
