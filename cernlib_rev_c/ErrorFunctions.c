@@ -45,7 +45,7 @@ void cerrf_rev(
     double factor = ( double )0.0;
     double h = ( double )0.0;
 
-    int nu = 0;
+    int nu = ( int )CERRF_GAUSS_HERMITE_NU;
     int N  = 0;
 
     bool z_is_in_r0 = false;
