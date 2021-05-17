@@ -7,9 +7,9 @@ F2PY = f2py
 F2PYFLAGS = --opt="-O3 -ffast-math -ftree-vectorize"
 
 
-.PHONY: all cernlib_c cernlib_rev_c cernlib_f90
+.PHONY: all cernlib_c cernlib_rev_c cernlib_rev2_c cernlib_f90
 
-all: cernlib_c cernlib_rev_c cernlib_f90 root_improvement root_improvement_fast root_improvement_sincos
+all: cernlib_c cernlib_rev_c cernlib_rev2_c cernlib_f90 root_improvement root_improvement_fast root_improvement_sincos
 
 cernlib_c:
 	@echo "cernlib_c";
@@ -18,6 +18,10 @@ cernlib_c:
 cernlib_rev_c:
 	@echo "*** cernlib_rev_c ***";
 	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_rev_c/ErrorFunctions.c -o cernlib_rev_c/wofz_rev.so -lm
+
+cernlib_rev2_c:
+	@echo "*** cernlib_rev2_c ***";
+	$(CC) $(CFLAGS) $(LDFLAGS) cernlib_rev2_c/ErrorFunctions.c -o cernlib_rev2_c/wofz_rev2.so -lm
 
 cernlib_f90:
 	$(F2PY) $(F2PYFLAGS) -m wwerf -c cernlib_f90/erfr.f90; mv `ls -1 ./wwerf*.so` ./cernlib_f90/ ; cp `ls -1 ./cernlib_f90/wwerf*.so` ./cernlib_f90/wwerf.so
@@ -37,4 +41,5 @@ root_improvement_sincos:
 clean:
 	rm -f cernlib_c/*.so cernlib_f90/*.so cernlib_root_adapted/*.so
 	rm -f cernlib_rev_c/*.so
+	rm -f cernlib_rev2_c/*.so
 
