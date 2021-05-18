@@ -195,12 +195,12 @@ CERRF_INLINE void cerrf_rev2( double x, double y,
     double temp     = y * sign_y;
     double y_plus_h = temp;
 
-    double Rx, Ry, Sx, Sy, Wx, Wy, h2_n, factor;
+    double Rx, Ry, Sx, Sy, Wx, Wy, h2_n;
 
     int nu = ( int )CERRF_GAUSS_HERMITE_NU;
     int N  = 0;
 
-    bool z_is_in_r0, use_taylor_sum, do_taylor_step;
+    bool z_is_in_r0, use_taylor_sum;
     CERRF_ASSERT( ( out_x != NULL ) && ( out_y != NULL ) );
     Ry = Sx = Sy = h2_n = ( double )0.0;
 
@@ -260,7 +260,7 @@ CERRF_INLINE void cerrf_rev2( double x, double y,
 
     if( sign_y < ( double )0.0 )  /* Quadrants 3 & 4 */
     {
-        factor = ( double )2.0 * exp( y * y - x * x );
+        double const factor = ( double )2.0 * exp( y * y - x * x );
         temp = ( double )2.0 * x * y;
 
         Wx = factor * cos( temp ) - Wx;
