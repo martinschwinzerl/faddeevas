@@ -245,11 +245,13 @@ CERRF_INLINE void cerrf_rev2( double x, double y,
         Rx     = ( double )0.5 * Wx / temp;
         Ry     = ( double )0.5 * Wy / temp;
 
-        do_taylor_step = ( ( use_taylor_sum ) && ( n <= N ) );
-        temp   = h2_n + Sx;
-        h2_n  *= ( do_taylor_step ) ? inv_h2 : ( double )1.0;
-        Sx     = ( ( double )( do_taylor_step ) ) * ( Rx * temp - Ry * Sy );
-        Sy     = ( ( double )( do_taylor_step ) ) * ( Ry * temp + Rx * Sy );
+        if( ( use_taylor_sum ) && ( n <= N ) )
+        {
+            temp   = h2_n + Sx;
+            h2_n   = h2_n * inv_h2;
+            Sx     = Rx * temp - Ry * Sy;
+            Sy     = Ry * temp + Rx * Sy;
+        }
     }
 
     /* Wx, Wy ... result for z|Q1 = |x| + i |y| ... in first quadrant! */
