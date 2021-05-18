@@ -4,10 +4,12 @@
 #if !defined( CERRF_NO_SYSTEM_INCLUDES )
 #if !defined( __cplusplus )
     #include <assert.h>
+    #include <math.h>
     #include <stdbool.h>
     #include <stddef.h>
 #else /* defined( __cplusplus ) */
     #include <cassert>
+    #include <cmath>
     #include <cstddef>
 #endif /* !defined( __cplusplus ) */
 #endif /* !defined( CERRF_NO_SYSTEM_INCLUDES ) */
