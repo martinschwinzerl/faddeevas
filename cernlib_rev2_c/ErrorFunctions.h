@@ -119,38 +119,57 @@ CERRF_INLINE double power_n( double x, unsigned int n )
 {
     double x_n = x;
 
-    CERRF_ASSERT( ( sqrt( x * x ) > ( double )CERRF_DOUBLE_EPS ) ||
-        ( n > ( unsigned int )0 ) );
+    unsigned int const n_div_16 = n >> 4u;
+    unsigned int const n_mod_16 = n - ( n_div_16 << 4u );
+    CERRF_ASSERT( n < 128u );
+    CERRF_ASSERT( n_div_16 * 16u + n_mod_16 == n );
+    CERRF_ASSERT( ( sqrt( x * x ) > ( double )CERRF_DOUBLE_EPS ) || ( n > 0u ) );
 
-    switch( n )
+    switch( n_mod_16 )
     {
         case  0: { x_n = ( double )1.0; break; }
         case  1: { break; }
-        case  2: { x_n *= x; break; }
-        case  3: { x_n *= x * x; break; }
-        case  4: { x_n *= x; x_n *= x_n; break; }
-        case  5: { x_n *= x; x_n *= x_n * x; break; }
-        case  6: { x_n *= x * x; x_n *= x_n; break; }
-        case  7: { x_n *= x * x; x_n *= x_n * x; break; }
-        case  8: { x_n *= x; x_n *= x_n; x_n *= x_n; break; }
-        case  9: { x_n *= x * x; x_n *= x_n * x_n; break; }
-        case 10: { x_n *= x * x; x_n *= x_n * x_n * x; break; }
-        case 11: { x *= x; x_n *= x; x_n *= x_n * x_n * x; break; }
-        case 12: { x_n *= x * x; x_n *= x_n; x_n *= x_n; break; }
-        case 13: { x_n *= x * x; x_n *= x_n; x_n *= x_n * x; break; }
-        case 14: { x *= x * x; x_n *= x * x; x_n *= x_n; break; }
-        case 15: { x *= x; x_n *= x * x; x_n *= x_n * x_n; break; }
-        case 16: { x_n *= x; x_n *= x_n; x_n *= x_n; x_n *= x_n; break; }
+        case  2: { x_n *= x;                                       break; }
+        case  3: { x_n *= x * x;                                   break; }
+        case  4: { x_n *= x;     x_n *= x_n;                       break; }
+        case  5: { x_n *= x;     x_n *= x_n * x;                   break; }
+        case  6: { x_n *= x * x; x_n *= x_n;                       break; }
+        case  7: { x_n *= x * x; x_n *= x_n * x;                   break; }
+        case  8: { x_n *= x;     x_n *= x_n;     x_n *= x_n;       break; }
+        case  9: { x_n *= x * x; x_n *= x_n * x_n;                 break; }
+        case 10: { x_n *= x * x; x_n *= x_n * x_n * x;             break; }
+        case 11: { x_n *= x;     x_n *= x_n * x; x_n *= x_n * x;   break; }
+        case 12: { x_n *= x * x; x_n *= x_n;     x_n *= x_n;       break; }
+        case 13: { x_n *= x * x; x_n *= x_n;     x_n *= x_n * x;   break; }
+        case 14: { x_n *= x * x; x_n *= x_n * x; x_n *= x_n;       break; }
+        case 15: { x_n *= x;     x_n *= x_n * x; x_n *= x_n * x_n; break; }
 
         default:
         {
-            CERRF_ASSERT( n <= 64u );
-            CERRF_ASSERT( n >  16u );
-
-            x_n *= x; x_n *= x_n; x_n *= x_n; x_n *= x_n;
-            x_n *= power_n( x, n - 16u );
+            CERRF_ASSERT( n > 15u );
+            x_n = ( double )0.0;
         }
-    }
+    };
+
+    if( n_div_16 > 0u ) { x *= x; x *= x; x *= x; x *= x; }
+
+    switch( n_div_16 )
+    {
+        case  0: { x_n  = ( n_mod_16 != 0u ) ? x_n : ( double )1.0; break; }
+        case  1: { x_n *= x;                                        break; }
+        case  2: { x   *= x; x_n *= x;                              break; }
+        case  3: { x_n *= x * x * x;                                break; }
+        case  4: { x   *= x; x *= x; x_n *= x;                      break; }
+        case  5: { x_n *= x; x *= x; x *= x; x_n *= x;              break; }
+        case  6: { x   *= x * x; x *= x; x_n *= x;                  break; }
+        case  7: { x_n *= x; x *= x * x; x *= x; x_n *= x;          break; }
+        default:
+        {
+            CERRF_ASSERT( n < 128u );
+            CERRF_ASSERT( n > 0u );
+            x_n = ( double )0.0;
+        }
+    };
 
     return x_n;
 }
