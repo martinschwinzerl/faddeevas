@@ -24,13 +24,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-double power_n_ext( double const x, unsigned int const n )
-{
-    return power_n( x, n );
-}
-
-void cerrf_rev2_ext( double const x, double const y,
-    double* restrict out_x, double* restrict out_y )
+void cerrf_rev2_ext( CERRF_REAL_TYPE const x, CERRF_REAL_TYPE const y,
+    CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
+    CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT
 {
     cerrf_rev2( x, y, out_x, out_y );
 }
