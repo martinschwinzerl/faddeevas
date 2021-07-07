@@ -11,8 +11,8 @@
 
 int main( int const argc, char* argv[] )
 {
-    double const XLIM = double{ 5.33 };
-    double const YLIM = double{ 4.29 };
+    double const XLIM = double{ 6.3 };
+    double const YLIM = double{ 4.4 };
 
     int platform_id = 1;
     int device_id = 0;
@@ -86,7 +86,7 @@ int main( int const argc, char* argv[] )
     cl::CommandQueue queue( ctx, device, CL_QUEUE_PROFILING_ENABLE );
 
     std::string kernel_src;
-    std::ifstream in_kernel( "./cerrf.cl" );
+    std::ifstream in_kernel( "./wofz.cl" );
 
     if( in_kernel.is_open() )
     {
@@ -96,13 +96,13 @@ int main( int const argc, char* argv[] )
     }
 
     std::string const kernel_compile_options =
-        "-D_GPUCODE=1 -DCERRF_NO_SYSTEM_INCLUDES=1 -s./cerrf.cl -g";
+        "-I.. -D_GPUCODE=1 -DCERRF_NO_SYSTEM_INCLUDES=1 -s./wofz.cl -g";
 
     cl::Program program( ctx, kernel_src );
     ::cl_int ret = program.build( kernel_compile_options.c_str() );
 
     assert( ret == CL_SUCCESS );
-    cl::Kernel kernel( program, "eval_cerrf" );
+    cl::Kernel kernel( program, "eval_wofz" );
 
     /* --------------------------------------------------------------------- */
 
