@@ -44,6 +44,9 @@ int main( int argc, char* argv[] )
     std::vector< real_type > xx( nreal, real_type{ 0.0 } );
     std::vector< real_type > yy( nimag, real_type{ 0.0 } );
 
+    xx.clear();
+    yy.clear();
+
     for( std::size_t ii = std::size_t{ 0 } ; ii < nreal ; ++ii )
     {
         if( !in_absc.is_open() ) break;
