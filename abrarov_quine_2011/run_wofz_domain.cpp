@@ -75,7 +75,7 @@ int main( int argc, char* argv[] )
     std::ofstream out_data( path_to_output_file );
     out_data << nreal << "\r\n" << nimag << "\r\n";
 
-    out_data.precision( 18 );
+    out_data.precision( 20 );
 
     for( std::size_t ii = 0u ; ii < nreal ; ++ii )
     {
@@ -93,9 +93,12 @@ int main( int argc, char* argv[] )
             ::wofz_abrarov_quine( x, y, &wz_re, &wz_im,
                 &CERRF_FOURIER_COEFF[ 0 ], &CERRF_TAYLOR_COEFF[ 0 ] );
 
-            out_data << std::setw( 40 ) << x << std::setw( 40 ) << y
-                     << std::setw( 40 ) << wz_re << std::setw( 40 ) << wz_im
-                     << "\r\n";
+            out_data << std::scientific
+                     << std::setw( 40 ) << x
+                     << std::setw( 40 ) << y
+                     << std::setw( 40 ) << wz_re
+                     << std::setw( 40 ) << wz_im
+                     << std::fixed << "\r\n";
         }
     }
 
