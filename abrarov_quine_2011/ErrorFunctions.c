@@ -375,4 +375,6 @@ int wofz_abrarov_quine_ext( real_type in_x, real_type in_y,
 {
     wofz_abrarov_quine( in_x, in_y, out_x, out_y, &CERRF_FOURIER_COEFF[ 0 ],
         &CERRF_TAYLOR_COEFF[ 0 ] );
+
+    return 0;
 }
