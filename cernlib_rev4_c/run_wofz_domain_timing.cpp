@@ -14,8 +14,7 @@
 #include <utility>
 
 #include "common/definitions.h"
-#include "cernlib_rev2_c/definitions.h"
-#include "cernlib_c/ErrorFunctions.h"
+#include "cernlib_rev4_c/ErrorFunctions.h"
 
 CERRF_REAL_TYPE gz( CERRF_REAL_TYPE const x, CERRF_REAL_TYPE const y,
                     CERRF_REAL_TYPE const x0, CERRF_REAL_TYPE const y0
@@ -192,7 +191,7 @@ int main( int argc, char* argv[] )
         real_type const y = yy[ jj ];
 
         auto const start = clock_type::now();
-        ::cerrf( x, y, &out_re[ out_idx ], &out_im[ out_idx ] );
+        ::cerrf_rev4( x, y, &out_re[ out_idx ], &out_im[ out_idx ] );
         auto const stop = clock_type::now();
 
         std::chrono::duration< double, std::micro > const t_elapsed =

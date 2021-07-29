@@ -1,5 +1,5 @@
-#ifndef FADDEEVAS_CERNLIB_REV3__C_H__
-#define FADDEEVAS_CERNLIB_REV3__C_H__
+#ifndef FADDEEVAS_CERNLIB_REV4_C_H__
+#define FADDEEVAS_CERNLIB_REV4_C_H__
 
 #if !defined( CERRF_NO_SYSTEM_INCLUDES )
 #if !defined( __cplusplus )
@@ -17,7 +17,7 @@
 #if !defined( CERRF_NO_INCLUDES )
     #include "common/definitions.h"
     #include "common/helper_functions.h"
-    #include "cernlib_rev2_c/definitions.h"
+    #include "cernlib_rev4_c/definitions.h"
 #endif /* !defined( CERRF_NO_INCLUDES ) */
 
 #if defined( __cplusplus )
@@ -25,12 +25,12 @@ extern "C" {
 #endif /* defined( __cplusplus ) */
 
 
-CERRF_STATIC CERRF_FN void cerrf_rev3(
+CERRF_STATIC CERRF_FN void cerrf_rev4(
     CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT;
 
-CERRF_STATIC CERRF_FN int wofz_cernlib_rev3(
+CERRF_STATIC CERRF_FN int wofz_cernlib_rev4(
     CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT;
@@ -39,7 +39,7 @@ CERRF_STATIC CERRF_FN int wofz_cernlib_rev3(
 
 #if !defined( _GPUCODE )
 
-CERRF_EXTERN void cerrf_rev3_ext(
+CERRF_EXTERN void cerrf_rev4_ext(
     CERRF_REAL_TYPE const x, CERRF_REAL_TYPE const y,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT;
@@ -48,7 +48,7 @@ CERRF_EXTERN void cerrf_rev3_ext(
 
 /* ************************************************************************* */
 
-CERRF_INLINE void cerrf_rev3( CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
+void cerrf_rev4( CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT
 {
@@ -72,36 +72,42 @@ CERRF_INLINE void cerrf_rev3( CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     real_type temp     = y * sign_y;
     real_type y_plus_h = temp;
 
-    real_type Rx, Ry, Sx, Sy, Wx, Wy, inv_Wsqu, h2_n;
+    real_type Rx, Ry, Sx, Sy, Wx, Wy, h2_n;
 
     int nu = ( int )CERRF_GAUSS_HERMITE_NU;
-    int n  = 0;
     int N  = 0;
+    bool use_taylor_sum = false;
 
-    bool z_is_in_r0, use_taylor_sum;
+    #if defined( __cplusplus )
+    using std::sqrt;
+    using std::floor;
+    using std::exp;
+    using std::cos;
+    using std::sin;
+    #endif /* defined( __cplusplus ) */
+
     CERRF_ASSERT( ( out_x != NULL ) && ( out_y != NULL ) );
-    Ry = Sx = Sy = h2_n = ( real_type )0.0;
+    Rx = Ry = Sx = Sy = h2_n = ( real_type )0.0;
 
     y  = temp;
 	x *= sign_x;
 
-    z_is_in_r0 = ( ( y < ( real_type )CERRF_Y_LIMIT ) &&
-                   ( x < ( real_type )CERRF_X_LIMIT ) );
-
-    if( z_is_in_r0 )
+	if( ( y < ( real_type )CERRF_Y_LIMIT ) &&
+        ( x < ( real_type )CERRF_X_LIMIT ) )
     {
-        temp = x / ( real_type )CERRF_X_LIMIT;
-        temp = ( ( real_type )1.0 - y / ( real_type )CERRF_Y_LIMIT ) *
-               sqrt( ( real_type )1.0 - temp * temp );
+        temp  = x / ( real_type )CERRF_X_LIMIT;
+        temp  = sqrt( ( real_type )1.0 - temp * temp );
+        temp *= ( ( real_type )1.0 - y / ( real_type )CERRF_Y_LIMIT );
 
-        nu   = ( y > ( real_type )CERRF_REAL_EPS )
-             ? ( int )CERRF_NU_0 + ( int )( ( real_type )CERRF_NU_1 * temp )
-             : ( int )0;
+        N     = ( int )floor( ( real_type )CERRF_N0   + ( real_type )CERRF_N1   * temp );
+        nu    = ( int )floor( ( real_type )CERRF_NU_0 + ( real_type )CERRF_NU_1 * temp );
 
-        N    = ( int )CERRF_N0 + ( int )( ( real_type )CERRF_N1 * temp );
-        h2_n = ( real_type )CERRF_H0 * temp;
-        y_plus_h += h2_n;
+        temp *= ( real_type )CERRF_H0;
+        y_plus_h += temp;
+
+        h2_n  = temp;
         h2_n *= ( real_type )2.0;
+        use_taylor_sum = ( bool )( h2_n > ( real_type )CERRF_REAL_EPS );
 
         CERRF_ASSERT( h2_n > ( real_type )CERRF_REAL_EPS );
         inv_h2 = ( real_type )1.0 / h2_n;
@@ -109,49 +115,55 @@ CERRF_INLINE void cerrf_rev3( CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
         h2_n = power_n( h2_n, N - 1 );
     }
 
-    Rx = ( y > ( real_type )CERRF_REAL_EPS )
-       ? ( real_type )0.0
-       : exp( -x * x ) / ( real_type )CERRF_TWO_OVER_SQRT_PI;
-
-    use_taylor_sum = ( z_is_in_r0 ) && ( h2_n > ( real_type )CERRF_REAL_EPS );
-    n = nu;
-
-    for( ; n > N ; --n )
+    if( y < ( real_type )CERRF_REAL_EPS )
     {
-        Wx       = y_plus_h + ( real_type )n * Rx;
-        temp     = Wx * Wx;
-        Wy       = x - ( real_type )n * Ry;
-        temp    += Wy * Wy;
-        inv_Wsqu = ( real_type )0.5 / temp;
-        Rx       = Wx * inv_Wsqu;
-        Ry       = Wy * inv_Wsqu;
+        Rx = exp( -x * x ) / ( real_type )CERRF_TWO_OVER_SQRT_PI;
+        nu = 0;
     }
 
-    #if !defined( _GPUCODE )
     if( !use_taylor_sum )
     {
-        Wx = ( real_type )CERRF_TWO_OVER_SQRT_PI * Sx;
-        Wy = ( real_type )CERRF_TWO_OVER_SQRT_PI * Sy;
+        for( int n = nu ; n > 0 ; --n )
+        {
+            Wx       = y_plus_h + n * Rx;
+            Wy       = x - n * Ry;
+            temp     = Wx * Wx + Wy * Wy;
+            Rx       = ( real_type )0.5 * Wx;
+            Rx      /= temp;
+            Ry       = ( real_type )0.5 * Wy;
+            Ry      /= temp;
+        }
+
+        Wx = ( real_type )CERRF_TWO_OVER_SQRT_PI * Rx;
+        Wy = ( real_type )CERRF_TWO_OVER_SQRT_PI * Ry;
     }
     else
-    #else
-    if( use_taylor_sum )
-    #endif
     {
-        for( ; n > 0 ; --n )
+        for( int n = nu ; n > N ; --n )
         {
-            Wx       = y_plus_h + ( real_type )n * Rx;
-            temp     = Wx * Wx;
-            Wy       = x - ( real_type )n * Ry;
-            temp    += Wy * Wy;
-            inv_Wsqu = ( real_type )0.5 / temp;
-            Rx       = Wx * inv_Wsqu;
-            Ry       = Wy * inv_Wsqu;
+            Wx       = y_plus_h + n * Rx;
+            Wy       = x - n * Ry;
+            temp     = Wx * Wx + Wy * Wy;
+            Rx       = ( real_type )0.5 * Wx;
+            Rx      /= temp;
+            Ry       = ( real_type )0.5 * Wy;
+            Ry      /= temp;
+        }
 
-            temp   = h2_n + Sx;
-            h2_n  *= inv_h2;
-            Sx     = Rx * temp - Ry * Sy;
-            Sy     = Ry * temp + Rx * Sy;
+        for( int n = N ; n > 0 ; --n )
+        {
+            Wx       = y_plus_h + n * Rx;
+            Wy       = x - n * Ry;
+            temp     = Wx * Wx + Wy * Wy;
+            Rx       = ( real_type )0.5 * Wx;
+            Rx      /= temp;
+            Ry       = ( real_type )0.5 * Wy;
+            Ry      /= temp;
+
+            Wx       = h2_n + Sx;
+            h2_n    *= inv_h2;
+            Sx       = Rx * Wx - Ry * Sy;
+            Sy       = Ry * Wx + Rx * Sy;
         }
 
         Wx = ( real_type )CERRF_TWO_OVER_SQRT_PI * Sx;
@@ -171,16 +183,16 @@ CERRF_INLINE void cerrf_rev3( CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     *out_y = sign_x * Wy;
 }
 
-CERRF_INLINE int wofz_cernlib_rev2(
+CERRF_INLINE int wofz_cernlib_rev4(
     CERRF_REAL_TYPE x, CERRF_REAL_TYPE y,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_x,
     CERRF_RESULT_DEC CERRF_REAL_TYPE* CERRF_RESTRICT out_y ) CERRF_NOEXCEPT
 {
-    cerrf_rev3( x, y, out_x, out_y );
+    cerrf_rev4( x, y, out_x, out_y );
     return 0;
 }
 
 #if defined( __cplusplus )
 }
 #endif /* defined( __cplusplus ) */
-#endif /* FADDEEVAS_CERNLIB_REV3__C_H__ */
+#endif /* FADDEEVAS_CERNLIB_REV4_C_H__ */

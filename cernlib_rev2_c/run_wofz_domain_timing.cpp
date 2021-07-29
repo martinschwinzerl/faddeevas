@@ -1,15 +1,17 @@
 #include <algorithm>
 #include <cassert>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <cmath>
-#include <string>
 #include <chrono>
-#include <vector>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <random>
+#include <string>
+#include <vector>
+#include <utility>
 
 #include "common/definitions.h"
 #include "cernlib_rev2_c/ErrorFunctions.h"
@@ -40,13 +42,13 @@ CERRF_REAL_TYPE gz( CERRF_REAL_TYPE const x, CERRF_REAL_TYPE const y,
 int main( int argc, char* argv[] )
 {
     typedef CERRF_REAL_TYPE real_type;
+    typedef std::chrono::steady_clock clock_type;
 
-    std::size_t const CHUNK_SIZE = std::size_t{ 10 };
-    std::size_t NUM_REPETITIONS  = std::size_t{ 40 };
-    std::size_t NUM_EVALUATIONS  = std::size_t{ 1000 };
+    std::size_t NUM_EVALUATIONS = std::size_t{ 500 };
 
     std::string path_to_abscissa_file;
     std::string path_to_output_file;
+    std::mt19937_64 prng( std::mt19937_64::result_type{ 20210725 } );
 
     real_type const x0 = real_type{ CERRF_X_LIMIT };
     real_type const y0 = real_type{ CERRF_Y_LIMIT };
@@ -68,12 +70,6 @@ int main( int argc, char* argv[] )
         {
             NUM_EVALUATIONS = static_cast< std::size_t >(
                 std::atoi( argv[ 3 ] ) );
-
-            if( argc >= 5 )
-            {
-                NUM_REPETITIONS = static_cast< std::size_t >(
-                    std::atoi( argv[ 4 ] ) );
-            }
         }
     }
     else
@@ -85,13 +81,8 @@ int main( int argc, char* argv[] )
         return 0;
     }
 
-    std::size_t n_chunks = NUM_EVALUATIONS / CHUNK_SIZE;
-    if( n_chunks * CHUNK_SIZE < NUM_EVALUATIONS ) ++n_chunks;
-    NUM_EVALUATIONS = n_chunks * CHUNK_SIZE;
-
     std::size_t nreal = std::size_t{ 0 };
     std::size_t nimag = std::size_t{ 0 };
-
 
     std::ifstream in_absc( path_to_abscissa_file );
     if( !in_absc.is_open() ) return 0;
@@ -124,7 +115,7 @@ int main( int argc, char* argv[] )
 
     if( xx.size() != nreal ) return 0;
 
-    for( std::size_t ii = std::size_t{ 0 } ; ii < nreal ; ++ii )
+    for( std::size_t ii = std::size_t{ 0 } ; ii < nimag ; ++ii )
     {
         if( !in_absc.is_open() ) break;
 
@@ -137,10 +128,6 @@ int main( int argc, char* argv[] )
     }
 
     if( yy.size() != nimag ) return 0;
-
-    std::vector< double > out_re( NUM_EVALUATIONS,  double{ 0.0 } );
-    std::vector< double > out_im( NUM_EVALUATIONS,  double{ 0.0 } );
-    std::vector< double > timings( NUM_REPETITIONS, double{ 0.0 } );
 
     std::ofstream out_data( path_to_output_file );
 
@@ -160,20 +147,81 @@ int main( int argc, char* argv[] )
              << std::setw( 15 ) << "t_run_10_perc"
              << std::setw( 15 ) << "t_run_90 perc\r\n";
 
+    std::vector< std::vector< double > > timings;
+    timings.clear();
+    timings.reserve( nreal * nimag );
 
-    for( std::size_t ii = 0u ; ii < nreal ; ++ii )
+    std::vector< std::pair< std::size_t, std::size_t > > rand_indices;
+    rand_indices.clear();
+    rand_indices.reserve( NUM_EVALUATIONS * nreal * nimag );
+
+    for( std::size_t jj = 0u ; jj < nimag ; ++jj )
     {
-        real_type const x = xx[ ii ];
-
-        std::cout << "ii = "
-                  << std::setw( 10 ) << ii + 1u << " / "
-                  << std::setw( 10 ) << nreal
-                  << std::endl;
-
-        for( std::size_t jj = 0u ; jj < nimag ; ++jj )
+        for( std::size_t ii = 0u ; ii < nreal ; ++ii )
         {
-            real_type const y = yy[ jj ];
+            timings.emplace_back( NUM_EVALUATIONS, double{ 0.0 } );
+            timings.back().clear();
 
+            for( std::size_t kk = 0u ; kk < NUM_EVALUATIONS ; ++kk )
+            {
+                rand_indices.emplace_back( jj, ii );
+            }
+        }
+    }
+
+    std::shuffle( rand_indices.begin(), rand_indices.end(), prng );
+    std::vector< double > out_re( nreal * nimag,  double{ 0.0 } );
+    std::vector< double > out_im( nreal * nimag,  double{ 0.0 } );
+
+    std::size_t const nn = rand_indices.size();
+
+    std::size_t const one_percent_of_nn = static_cast< std::size_t >(
+        std::floor( double{ 0.01 } * nn + double{ 0.5 } ) );
+
+    auto start_chunk = clock_type::now();
+
+    for( std::size_t kk = 0u ; kk < nn ; ++kk )
+    {
+        auto const idx = rand_indices[ kk ];
+        std::size_t const ii = idx.second;
+        std::size_t const jj = idx.first;
+        std::size_t const out_idx = ii + jj * nreal;
+
+        real_type const x = xx[ ii ];
+        real_type const y = yy[ jj ];
+
+        auto const start = clock_type::now();
+        ::cerrf_rev2( x, y, &out_re[ out_idx ], &out_im[ out_idx ] );
+        auto const stop = clock_type::now();
+
+        std::chrono::duration< double, std::micro > const t_elapsed =
+            stop - start;
+
+        timings[ out_idx ].push_back( t_elapsed.count() );
+
+        if( ( kk > 0u ) && ( ( kk % one_percent_of_nn ) == 0u ) )
+        {
+            auto const stop_chunk = clock_type::now();
+            std::chrono::duration< double, std::ratio< 1 > >
+                const t_elapsed_chunk = stop_chunk - start_chunk;
+
+            std::cout << "Evaluated " << std::setw( 20 ) << kk + 1
+                      << " / " << std::setw( 20 ) << nn
+                      << " ( " << std::setw( 4 )
+                      << kk / one_percent_of_nn << "% ) : "
+                      << t_elapsed_chunk.count() << " sec" << std::endl;
+
+            start_chunk = clock_type::now();
+        }
+    }
+
+    for( std::size_t jj = 0u ; jj < nimag ; ++jj )
+    {
+        real_type const y = yy[ jj ];
+
+        for( std::size_t ii = 0u ; ii < nreal ; ++ii )
+        {
+            real_type const x = xx[ ii ];
             real_type const g = ( x <= x0 && y <= y0 )
                 ? gz( x, y, x0, y0 ) : real_type{ 1.0 };
 
@@ -185,65 +233,38 @@ int main( int argc, char* argv[] )
                 ? static_cast< int >( std::floor( NU_0 + NU_1 * g ) )
                 : static_cast< int >( CERRF_GAUSS_HERMITE_NU );
 
-            std::fill( timings.begin(), timings.end(), real_type{ 0.0 } );
-
-            for( std::size_t ll = 0u ; ll < NUM_REPETITIONS ; ++ll )
-            {
-                std::fill( out_re.begin(), out_re.end(), real_type{ 0.0 } );
-                std::fill( out_im.begin(), out_im.end(), real_type{ 0.0 } );
-                real_type t = real_type{ 0.0 };
-                real_type num_evals = real_type{ 0.0 };
-
-                for( std::size_t kk = 0u ; kk < n_chunks ; ++kk )
-                {
-                    std::size_t nn = kk * CHUNK_SIZE;
-                    auto start = std::chrono::high_resolution_clock::now();
-
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-                    ::cerrf_rev2( x, y, &out_re[ nn ], &out_im[ nn++ ] );
-
-                    auto stop = std::chrono::high_resolution_clock::now();
-
-                    std::chrono::duration< double, std::micro > const diff =
-                        stop - start;
-
-                    t += diff.count();
-                    num_evals += real_type{ 10.0 };
-                }
-
-                timings[ ll ] = t / num_evals;
-            }
-
-            std::sort( timings.begin(), timings.end() );
+            std::size_t const out_idx = ii + jj * nreal;
 
             out_data.precision( 10 );
 
             out_data << std::scientific
                      << std::setw( 20 ) << x << " "
-                     << std::setw( 20 ) << y << " "
-                     << std::setw( 20 ) << g << " "
-                     << std::setw(  6 ) << N << " "
-                     << std::setw(  6 ) << NU << " "
-                     << std::setw( 20 ) << out_re[ 0 ] << " "
-                     << std::setw( 20 ) << out_im[ 0 ] << " "
-                     << std::setw(  8 ) << NUM_EVALUATIONS << " "
-                     << std::setw(  8 ) << NUM_REPETITIONS << " ";
+                     << std::setw( 19 ) << y << " "
+                     << std::setw( 19 ) << g << " "
+                     << std::setw(  5 ) << N << " "
+                     << std::setw(  5 ) << NU << " "
+                     << std::setw( 19 ) << out_re[ out_idx ] << " "
+                     << std::setw( 19 ) << out_im[ out_idx ] << " "
+                     << std::setw(  7 ) << NUM_EVALUATIONS << " "
+                     << std::setw(  7 ) << 1 << " ";
 
+            std::size_t const num_evals = timings[ out_idx ].size();
+
+            std::size_t const median_idx = num_evals >> 1;
+            std::size_t const perc10_idx = static_cast< std::size_t >(
+                std::floor( double{ 0.1 } * num_evals + double{ 0.5 } ) );
+
+            std::size_t const perc90_idx = static_cast< std::size_t >(
+                std::floor( double{ 0.9 } * num_evals + double{ 0.5 } ) );
+
+            std::sort( timings[ out_idx ].begin(), timings[ out_idx ].end() );
             out_data.precision( 6 );
             out_data << std::fixed
-                     << std::setw( 15 ) << timings[ timings.size() >> 1 ] << " "
-                     << std::setw( 15 ) << timings.front() << " "
-                     << std::setw( 15 ) << timings.back() << " "
-                     << std::setw( 15 ) << timings[ static_cast< int >( 0.1 * timings.size() + 0.5 ) ] << " "
-                     << std::setw( 15 ) << timings[ static_cast< int >( 0.9 * timings.size() + 0.5 ) ] << "\r\n";
+                     << std::setw( 14 ) << timings[ out_idx ][ median_idx ] << " "
+                     << std::setw( 14 ) << timings[ out_idx ].front() << " "
+                     << std::setw( 14 ) << timings[ out_idx ].back() << " "
+                     << std::setw( 14 ) << timings[ out_idx ][ perc10_idx ] << " "
+                     << std::setw( 14 ) << timings[ out_idx ][ perc90_idx ] << "\r\n";
         }
     }
 
